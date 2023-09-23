@@ -27,27 +27,6 @@ func TestNextToken(t *testing.T) {
 
 }
 
-func assertNextTokens(t *testing.T, input string, testCases []struct {
-	expectedType    token.TokenType
-	expectedLiteral string
-}) {
-	lexer := New(input)
-
-	for i, testToken := range testCases {
-		lexedToken := lexer.NextToken()
-
-		if lexedToken.Type != testToken.expectedType {
-			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
-				i, testToken.expectedType, lexedToken.Type)
-		}
-
-		if lexedToken.Literal != testToken.expectedLiteral {
-			t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q",
-				i, testToken.expectedLiteral, lexedToken.Literal)
-		}
-	}
-}
-
 func TestNextTokenExtendedSet(t *testing.T) {
 	input := `let five = 5;
 	let ten = 10;
@@ -100,4 +79,25 @@ func TestNextTokenExtendedSet(t *testing.T) {
 	}
 
 	assertNextTokens(t, input, tests)
+}
+
+func assertNextTokens(t *testing.T, input string, testCases []struct {
+	expectedType    token.TokenType
+	expectedLiteral string
+}) {
+	lexer := New(input)
+
+	for i, testToken := range testCases {
+		lexedToken := lexer.NextToken()
+
+		if lexedToken.Type != testToken.expectedType {
+			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
+				i, testToken.expectedType, lexedToken.Type)
+		}
+
+		if lexedToken.Literal != testToken.expectedLiteral {
+			t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q",
+				i, testToken.expectedLiteral, lexedToken.Literal)
+		}
+	}
 }
