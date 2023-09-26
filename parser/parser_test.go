@@ -8,7 +8,9 @@ import (
 
 func TestLetStatements(t *testing.T) {
 	input := `
-let x = 10;
+let x = 5;
+let y = 10;
+let gmail = 50;
 `
 
 	l := lexer.New(input)
@@ -19,14 +21,16 @@ let x = 10;
 		t.Fatalf("ParseProgram() returned nil")
 	}
 
-	if len(program.Statements) != 1 {
-		t.Fatalf("program.Statements does not contain 1 statement. got %d", len(program.Statements))
+	if len(program.Statements) != 3 {
+		t.Fatalf("program.Statements does not contain 3 statements. got %d", len(program.Statements))
 	}
 
 	tests := []struct {
 		expectedIdent string
 	}{
 		{"x"},
+		{"y"},
+		{"gmail"},
 	}
 
 	for i, tt := range tests {
