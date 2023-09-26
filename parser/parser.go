@@ -24,6 +24,33 @@ const (
 	CALL        // myFunction(X)
 )
 
+var precedences = map[token.TokenType]int{
+	token.EQ:       EQUALS,
+	token.NOT_EQ:   EQUALS,
+	token.LT:       LESSGREATER,
+	token.GT:       LESSGREATER,
+	token.PLUS:     SUM,
+	token.MINUS:    SUM,
+	token.SLASH:    PRODUCT,
+	token.ASTERISK: PRODUCT,
+}
+
+func (p *Parser) peekPrecedence() int {
+	if p, ok := precedences[p.peekToken.Type]; ok {
+		return p
+	}
+
+	return LOWEST
+}
+
+func (p *Parser) currentPrecedence() int {
+	if p, ok := precedences[p.currentToken.Type]; ok {
+		return p
+	}
+
+	return LOWEST
+}
+
 type Parser struct {
 	l *lexer.Lexer
 
@@ -49,6 +76,14 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefixFunc(token.MINUS, p.parsePrefixExpression)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
+	p.registerInfixFunc(token.PLUS, p.parseInfixExpression)
+	p.registerInfixFunc(token.MINUS, p.parseInfixExpression)
+	p.registerInfixFunc(token.SLASH, p.parseInfixExpression)
+	p.registerInfixFunc(token.ASTERISK, p.parseInfixExpression)
+	p.registerInfixFunc(token.EQ, p.parseInfixExpression)
+	p.registerInfixFunc(token.NOT_EQ, p.parseInfixExpression)
+	p.registerInfixFunc(token.LT, p.parseInfixExpression)
+	p.registerInfixFunc(token.GT, p.parseInfixExpression)
 
 	return p
 }
@@ -137,6 +172,17 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 	leftExp := prefix()
 
+	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
+		infixFn := p.infixParseFns[p.peekToken.Type]
+		if infixFn == nil {
+			return leftExp
+		}
+
+		p.nextToken()
+
+		leftExp = infixFn(leftExp)
+	}
+
 	return leftExp
 }
 
@@ -210,4 +256,19 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 func (p *Parser) noPrefixParseFnError(tokenType token.TokenType) {
 	msg := fmt.Sprintf("no prefix parse function for %s found", tokenType)
 	p.errors = append(p.errors, msg)
+}
+
+func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
+	exp := &ast.InfixExpression{
+		Token:    p.currentToken,
+		Left:     left,
+		Operator: p.currentToken.Literal,
+	}
+
+	precedence := p.currentPrecedence()
+	p.nextToken()
+
+	exp.Right = p.parseExpression(precedence)
+
+	return exp
 }
