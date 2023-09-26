@@ -163,14 +163,14 @@ func (p *Parser) parseStatement() ast.Statement {
 }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
-	prefix := p.prefixParseFns[p.currentToken.Type]
+	prefixFn := p.prefixParseFns[p.currentToken.Type]
 
-	if prefix == nil {
+	if prefixFn == nil {
 		p.noPrefixParseFnError(p.currentToken.Type)
 		return nil
 	}
 
-	leftExp := prefix()
+	leftExp := prefixFn()
 
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
 		infixFn := p.infixParseFns[p.peekToken.Type]
