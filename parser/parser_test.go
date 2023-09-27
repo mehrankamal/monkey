@@ -268,6 +268,37 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 	}
 }
 
+func TestBooleanExpression(t *testing.T) {
+	input := `true;
+false;`
+
+	testCases := []bool{
+		true,
+		false,
+	}
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	assertNoParserErrors(t, p)
+
+	if len(program.Statements) != 2 {
+		t.Fatalf("program has not enough statements. got=%d",
+			len(program.Statements))
+	}
+
+	for idx, stmt := range program.Statements {
+		expressionStmt, ok := stmt.(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0])
+		}
+
+		assertBoolean(t, expressionStmt.Expression, testCases[idx])
+	}
+
+}
+
 func assertLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let'. got=%q", s.TokenLiteral())
@@ -379,6 +410,26 @@ func assertIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 	if integerLiteral.TokenLiteral() != fmt.Sprintf("%d", value) {
 		t.Errorf("integerLiteral.TokenLiteral not %d. got=%s", value,
 			integerLiteral.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
+func assertBoolean(t *testing.T, boolExp ast.Expression, value bool) bool {
+	boolean, ok := boolExp.(*ast.Boolean)
+	if !ok {
+		t.Errorf("ast.Expression not ast.Boolean, got %T", boolExp)
+		return false
+	}
+
+	if boolean.Value != value {
+		t.Errorf("boolean.Value not %t, got %t", value, boolean.Value)
+		return false
+	}
+
+	if boolean.TokenLiteral() != fmt.Sprintf("%t", value) {
+		t.Errorf("boolean.TokenLiteral not %t, got %s", value, boolean.TokenLiteral())
 		return false
 	}
 
