@@ -29,6 +29,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return &object.ReturnValue{Value: returnVal}
 	case *ast.LetStatement:
 		val := Eval(node.Value, env)
+		if isError(val) {
+			return val
+		}
 		env.Set(node.Name.Value, val)
 
 	case *ast.PrefixExpression:
@@ -90,7 +93,7 @@ func evalBlockStatements(statements []ast.Statement, env *object.Environment) ob
 func evalIfExpression(node *ast.IfExpression, env *object.Environment) object.Object {
 	condition := Eval(node.Condition, env)
 
-	if isTruthy(condition) {
+	if isError(condition) {
 		return condition
 	}
 
