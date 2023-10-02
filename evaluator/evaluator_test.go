@@ -189,6 +189,22 @@ func TestErrorHandling(t *testing.T) {
 	}
 }
 
+func TestLetStatements(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"let a = 5; a;", 5},
+		{"let a = 5 * 5; a;", 25},
+		{"let a = 5; let b = a * 2; b;", 10},
+		{"let a = 5; let b = a; let c = a + b + 5; c;", 15},
+	}
+
+	for _, tt := range tests {
+		assertIntegerObject(t, evalInput(tt.input), tt.expected)
+	}
+}
+
 func assertNullObject(t *testing.T, evaluated object.Object) bool {
 	if evaluated != NULL {
 		t.Errorf("object is not NULL. got=%T (%+v)", evaluated, evaluated)
@@ -202,7 +218,9 @@ func evalInput(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)
 	program := p.ParseProgram()
-	return Eval(program)
+	env := object.NewEnvironment()
+
+	return Eval(program, env)
 }
 
 func assertBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
