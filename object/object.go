@@ -1,6 +1,11 @@
 package object
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+	"github.com/mehrankamal/monkey/ast"
+	"strings"
+)
 
 type Type string
 
@@ -15,6 +20,7 @@ const (
 	NULL              = "NULL"
 	RETURN_VALUE      = "RETURN_VALUE"
 	ERROR             = "ERROR"
+	FUNCTION          = "FUNCTION"
 )
 
 type Integer struct {
@@ -68,4 +74,27 @@ func (e *Environment) Get(name string) (Object, bool) {
 func (e *Environment) Set(name string, val Object) Object {
 	e.store[name] = val
 	return val
+}
+
+type Function struct {
+	Parameters []*ast.Identifier
+	Body       *ast.BlockStatement
+	Env        *Environment
+}
+
+func (f *Function) Type() Type { return FUNCTION }
+func (f *Function) Inspect() string {
+	var out bytes.Buffer
+	params := make([]string, 0)
+
+	for _, p := range f.Parameters {
+		params = append(params, p.String())
+	}
+	out.WriteString("fn")
+	out.WriteString("(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") {\n")
+	out.WriteString(f.Body.String())
+	out.WriteString("\n}")
+	return out.String()
 }
