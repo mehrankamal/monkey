@@ -172,7 +172,12 @@ func TestErrorHandling(t *testing.T) {
 						return true + false;
 					}
 					return 1;
-				}`, "unknown operator: BOOLEAN + BOOLEAN"}}
+				}`, "unknown operator: BOOLEAN + BOOLEAN"},
+		{
+			"foobar",
+			"identifier not found: foobar",
+		},
+	}
 
 	for _, tt := range tests {
 		evaluated := evalInput(tt.input)
