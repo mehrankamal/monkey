@@ -21,6 +21,7 @@ const (
 	RETURN_VALUE      = "RETURN_VALUE"
 	ERROR             = "ERROR"
 	FUNCTION          = "FUNCTION"
+	STRING            = "STRING"
 )
 
 type Integer struct {
@@ -108,3 +109,10 @@ func (f *Function) Inspect() string {
 	out.WriteString("\n}")
 	return out.String()
 }
+
+type String struct {
+	Value string
+}
+
+func (s *String) Type() Type      { return STRING }
+func (s *String) Inspect() string { return s.Value }
