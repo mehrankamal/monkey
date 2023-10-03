@@ -46,6 +46,7 @@ func TestNextTokenExtendedSet(t *testing.T) {
 	10 != 9;
 	"foobar"
 	"foobar bar bazz"
+	[1, 2];
 `
 	tests := []struct {
 		expectedType    token.TokenType
@@ -126,6 +127,12 @@ func TestNextTokenExtendedSet(t *testing.T) {
 		{token.SEMICOLON, ";"},
 		{token.STRING, "foobar"},
 		{token.STRING, "foobar bar bazz"},
+		{token.LBRACKET, "["},
+		{token.INT, "1"},
+		{token.COMMA, ","},
+		{token.INT, "2"},
+		{token.RBRACKET, "]"},
+		{token.SEMICOLON, ";"},
 		{token.EOF, ""},
 	}
 
