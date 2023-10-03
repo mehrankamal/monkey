@@ -81,14 +81,16 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 }
 
 func evalFunctionCall(fn object.Object, args []object.Object) object.Object {
-	function, ok := fn.(*object.Function)
-	if !ok {
+	switch function := fn.(type) {
+	case *object.Function:
+		extendedEnv := extendFunctionEnv(function, args)
+		evaluated := Eval(function.Body, extendedEnv)
+		return unwrapReturnValue(evaluated)
+	case *object.Builtin:
+		return function.Fn(args...)
+	default:
 		return newError("not a function: %s", fn.Type())
 	}
-
-	extendedEnv := extendFunctionEnv(function, args)
-	evaluated := Eval(function.Body, extendedEnv)
-	return unwrapReturnValue(evaluated)
 }
 
 func extendFunctionEnv(
@@ -126,12 +128,15 @@ func evalExpressions(expressions []ast.Expression, env *object.Environment) []ob
 }
 
 func evalIdentifier(ident *ast.Identifier, env *object.Environment) object.Object {
-	val, ok := env.Get(ident.Value)
-	if !ok {
-		return newError("identifier not found: " + ident.Value)
+	if val, ok := env.Get(ident.Value); ok {
+		return val
 	}
 
-	return val
+	if builtin, ok := builtins[ident.Value]; ok {
+		return builtin
+	}
+
+	return newError("identifier not found: " + ident.Value)
 }
 
 func evalBlockStatements(statements []ast.Statement, env *object.Environment) object.Object {

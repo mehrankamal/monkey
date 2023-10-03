@@ -22,6 +22,7 @@ const (
 	ERROR             = "ERROR"
 	FUNCTION          = "FUNCTION"
 	STRING            = "STRING"
+	BUILTIN           = "BUILTIN"
 )
 
 type Integer struct {
@@ -116,3 +117,12 @@ type String struct {
 
 func (s *String) Type() Type      { return STRING }
 func (s *String) Inspect() string { return s.Value }
+
+type BuiltinFunction func(args ...Object) Object
+
+type Builtin struct {
+	Fn BuiltinFunction
+}
+
+func (b *Builtin) Type() Type      { return BUILTIN }
+func (b *Builtin) Inspect() string { return "builtin function" }
