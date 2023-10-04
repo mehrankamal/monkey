@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/mehrankamal/monkey/ast"
+	"hash/fnv"
 	"strings"
 )
 
@@ -32,6 +33,9 @@ type Integer struct {
 
 func (i *Integer) Inspect() string { return fmt.Sprintf("%d", i.Value) }
 func (i *Integer) Type() Type      { return INTEGER }
+func (i *Integer) HashKey() HashKey {
+	return HashKey{Type: i.Type(), Value: uint64(i.Value)}
+}
 
 type Boolean struct {
 	Value bool
@@ -39,6 +43,17 @@ type Boolean struct {
 
 func (b *Boolean) Type() Type      { return BOOLEAN }
 func (b *Boolean) Inspect() string { return fmt.Sprintf("%t", b.Value) }
+func (b *Boolean) HashKey() HashKey {
+	var hashValue uint64
+
+	if b.Value {
+		hashValue = 1
+	} else {
+		hashValue = 0
+	}
+
+	return HashKey{Type: b.Type(), Value: hashValue}
+}
 
 type Null struct{}
 
@@ -118,6 +133,12 @@ type String struct {
 
 func (s *String) Type() Type      { return STRING }
 func (s *String) Inspect() string { return s.Value }
+func (s *String) HashKey() HashKey {
+	h := fnv.New64a()
+	h.Write([]byte(s.Value))
+
+	return HashKey{Type: s.Type(), Value: h.Sum64()}
+}
 
 type BuiltinFunction func(args ...Object) Object
 
@@ -146,4 +167,13 @@ func (ao *Array) Inspect() string {
 	out.WriteString("]")
 
 	return out.String()
+}
+
+type Hash struct {
+	Pairs map[Object]Object
+}
+
+type HashKey struct {
+	Type  Type
+	Value uint64
 }
