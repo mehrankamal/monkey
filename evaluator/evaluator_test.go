@@ -303,6 +303,10 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`last("a")`, "argument to `last` not supported, got STRING"},
 		{`last("a", "b")`, "wrong number of arguments. got=2, want=1"},
 		{`rest([1, 2, 3])`, []int64{2, 3}},
+		{`rest(rest([1, 2, 3]))`, []int64{3}},
+		{`rest(rest(rest([1, 2, 3])))`, []int64{}},
+		{`rest(rest(rest(rest([1, 2, 3]))))`, nil},
+		{`push([1], 1)`, []int64{1, 1}},
 	}
 
 	for _, tt := range tests {

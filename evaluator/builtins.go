@@ -64,6 +64,31 @@ func init() {
 	registerBuiltin(&builtins, "first", builtinFirst)
 	registerBuiltin(&builtins, "last", builtinLast)
 	registerBuiltin(&builtins, "rest", builtinRest)
+	registerBuiltin(&builtins, "push", builtinPush)
+
+}
+
+func builtinPush(args ...object.Object) object.Object {
+	if len(args) != 2 {
+		return newError("wrong number of arguments. got=%d, want=2", len(args))
+	}
+
+	switch arg := args[0].(type) {
+	case *object.Array:
+		return arrayPush(arg, args[1])
+	default:
+		return newError("argument to `push` not supported, got %s", args[0].Type())
+	}
+}
+
+func arrayPush(arr *object.Array, newElem object.Object) object.Object {
+	length := len(arr.Elements)
+
+	newElements := make([]object.Object, length+1)
+	copy(newElements, arr.Elements)
+
+	newElements[length] = newElem
+	return &object.Array{Elements: newElements}
 }
 
 func builtinRest(args ...object.Object) object.Object {
