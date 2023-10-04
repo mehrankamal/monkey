@@ -48,6 +48,7 @@ func TestNextTokenExtendedSet(t *testing.T) {
 	"foobar bar bazz"
 	[1, 2];
 	{"foo": "bar"}
+	[];
 `
 	tests := []struct {
 		expectedType    token.TokenType
@@ -139,6 +140,9 @@ func TestNextTokenExtendedSet(t *testing.T) {
 		{token.COLON, ":"},
 		{token.STRING, "bar"},
 		{token.RBRACE, "}"},
+		{token.LBRACKET, "["},
+		{token.RBRACKET, "]"},
+		{token.SEMICOLON, ";"},
 		{token.EOF, ""}}
 
 	assertNextTokens(t, input, tests)
