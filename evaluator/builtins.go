@@ -63,6 +63,32 @@ func init() {
 	registerBuiltin(&builtins, "len", builtinLen)
 	registerBuiltin(&builtins, "first", builtinFirst)
 	registerBuiltin(&builtins, "last", builtinLast)
+	registerBuiltin(&builtins, "rest", builtinRest)
+}
+
+func builtinRest(args ...object.Object) object.Object {
+	if len(args) != 1 {
+		return newError("wrong number of arguments. got=%d, want=1", len(args))
+	}
+
+	switch arg := args[0].(type) {
+	case *object.Array:
+		return restArray(arg)
+	default:
+		return newError("argument to `last` not supported, got %s", args[0].Type())
+	}
+}
+
+func restArray(arg *object.Array) object.Object {
+	length := len(arg.Elements)
+	if len(arg.Elements) > 0 {
+		newElems := make([]object.Object, length-1)
+		copy(newElems, arg.Elements[1:])
+
+		return &object.Array{Elements: newElems}
+	}
+
+	return NULL
 }
 
 func registerBuiltin(store *map[string]*object.Builtin, name string, function object.BuiltinFunction) bool {

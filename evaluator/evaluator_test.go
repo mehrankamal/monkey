@@ -302,12 +302,15 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`last([1])`, 1},
 		{`last("a")`, "argument to `last` not supported, got STRING"},
 		{`last("a", "b")`, "wrong number of arguments. got=2, want=1"},
+		{`rest([1, 2, 3])`, []int64{2, 3}},
 	}
 
 	for _, tt := range tests {
 		evaluated := evalInput(tt.input)
 
 		switch expected := tt.expected.(type) {
+		case []int64:
+			assertIntArrayObject(t, evaluated, expected)
 		case int:
 			assertIntegerObject(t, evaluated, int64(expected))
 		case string:
@@ -453,4 +456,19 @@ func assertIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
 	}
 
 	return true
+}
+
+func assertIntArrayObject(t *testing.T, evaluated object.Object, expected []int64) {
+	arr, ok := evaluated.(*object.Array)
+	if !ok {
+		t.Errorf("evaluated object has wrong type. Got %T (%+v)", evaluated, evaluated)
+	}
+
+	if len(expected) != len(arr.Elements) {
+		t.Errorf("Evaluated Array length does not match. Got %d, want %d", len(arr.Elements), len(expected))
+	}
+
+	for idx, elem := range expected {
+		assertIntegerObject(t, arr.Elements[idx], elem)
+	}
 }
