@@ -298,6 +298,10 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`first([])`, nil},
 		{`first("abc")`, "argument to `first` not supported, got STRING"},
 		{`first("a", "b")`, "wrong number of arguments. got=2, want=1"},
+		{`last([])`, nil},
+		{`last([1])`, 1},
+		{`last("a")`, "argument to `last` not supported, got STRING"},
+		{`last("a", "b")`, "wrong number of arguments. got=2, want=1"},
 	}
 
 	for _, tt := range tests {

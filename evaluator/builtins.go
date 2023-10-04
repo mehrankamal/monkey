@@ -39,9 +39,30 @@ func arrayFirst(arg *object.Array) object.Object {
 	return NULL
 }
 
+func builtinLast(args ...object.Object) object.Object {
+	if len(args) != 1 {
+		return newError("wrong number of arguments. got=%d, want=1", len(args))
+	}
+
+	switch arg := args[0].(type) {
+	case *object.Array:
+		return lastArray(arg)
+	default:
+		return newError("argument to `last` not supported, got %s", args[0].Type())
+	}
+}
+
+func lastArray(arg *object.Array) object.Object {
+	if len(arg.Elements) > 0 {
+		return arg.Elements[len(arg.Elements)-1]
+	}
+	return NULL
+}
+
 func init() {
 	registerBuiltin(&builtins, "len", builtinLen)
 	registerBuiltin(&builtins, "first", builtinFirst)
+	registerBuiltin(&builtins, "last", builtinLast)
 }
 
 func registerBuiltin(store *map[string]*object.Builtin, name string, function object.BuiltinFunction) bool {
