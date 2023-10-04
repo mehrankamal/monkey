@@ -294,6 +294,10 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`let a = [1, 2, 3, 4]; len(a)`, 4},
 		{`len([1, [1,2], 3])`, 3},
 		{`len([1, [1,2], 3][1])`, 2},
+		{`first([1, 2, 3]);`, 1},
+		{`first([])`, nil},
+		{`first("abc")`, "argument to `first` not supported, got STRING"},
+		{`first("a", "b")`, "wrong number of arguments. got=2, want=1"},
 	}
 
 	for _, tt := range tests {
@@ -313,6 +317,8 @@ func TestBuiltinFunctions(t *testing.T) {
 				t.Errorf("wrong error message. expected=%q, got=%q",
 					expected, errObj.Message)
 			}
+		default:
+			assertNullObject(t, evaluated)
 		}
 	}
 }

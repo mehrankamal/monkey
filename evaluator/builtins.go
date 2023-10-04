@@ -19,8 +19,29 @@ func builtinLen(args ...object.Object) object.Object {
 	}
 }
 
+func builtinFirst(args ...object.Object) object.Object {
+	if len(args) != 1 {
+		return newError("wrong number of arguments. got=%d, want=1", len(args))
+	}
+
+	switch arg := args[0].(type) {
+	case *object.Array:
+		return arrayFirst(arg)
+	default:
+		return newError("argument to `first` not supported, got %s", args[0].Type())
+	}
+}
+
+func arrayFirst(arg *object.Array) object.Object {
+	if len(arg.Elements) > 0 {
+		return arg.Elements[0]
+	}
+	return NULL
+}
+
 func init() {
 	registerBuiltin(&builtins, "len", builtinLen)
+	registerBuiltin(&builtins, "first", builtinFirst)
 }
 
 func registerBuiltin(store *map[string]*object.Builtin, name string, function object.BuiltinFunction) bool {
