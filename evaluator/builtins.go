@@ -1,6 +1,9 @@
 package evaluator
 
-import "github.com/mehrankamal/monkey/object"
+import (
+	"fmt"
+	"github.com/mehrankamal/monkey/object"
+)
 
 var builtins = make(map[string]*object.Builtin)
 
@@ -65,7 +68,16 @@ func init() {
 	registerBuiltin(&builtins, "last", builtinLast)
 	registerBuiltin(&builtins, "rest", builtinRest)
 	registerBuiltin(&builtins, "push", builtinPush)
+	registerBuiltin(&builtins, "puts", builtinPuts)
 
+}
+
+func builtinPuts(args ...object.Object) object.Object {
+	for _, arg := range args {
+		fmt.Println(arg.Inspect())
+	}
+
+	return NULL
 }
 
 func builtinPush(args ...object.Object) object.Object {
