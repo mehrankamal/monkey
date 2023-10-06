@@ -53,10 +53,12 @@ type Opcode byte
 
 const (
 	OpConstant Opcode = iota
+	OpAdd
 )
 
 var definitions = map[Opcode]*Definition{
 	OpConstant: {"OpConstant", []int{2}},
+	OpAdd:      {"OpAdd", []int{}},
 }
 
 func Lookup(op byte) (*Definition, error) {
