@@ -3,18 +3,18 @@ package repl
 import (
 	"bufio"
 	"fmt"
-	"github.com/mehrankamal/monkey/evaluator"
+	"github.com/mehrankamal/monkey/compiler"
 	"github.com/mehrankamal/monkey/lexer"
-	"github.com/mehrankamal/monkey/object"
 	"github.com/mehrankamal/monkey/parser"
+	"github.com/mehrankamal/monkey/vm"
 	"io"
+	"strings"
 )
 
 const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
-	env := object.NewEnvironment()
 
 	for {
 		fmt.Printf(PROMPT)
@@ -34,11 +34,31 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		evaluated := evaluator.Eval(program, env)
-		if evaluated != nil {
-			_, _ = io.WriteString(out, evaluated.Inspect())
-			_, _ = io.WriteString(out, "\n")
+		c := compiler.New()
+		err := c.Compile(program)
+		if err != nil {
+			fmt.Fprintf(out, "Woops! Compilation failed:\n %s\n", err)
+			continue
 		}
+
+		constStrings := []string{}
+
+		for idx, constant := range c.Bytecode().Constants {
+			constStrings = append(constStrings, fmt.Sprintf("%d: %s", idx, constant.Inspect()))
+		}
+
+		fmt.Fprintf(out, "Generated Opcodes:\n\t%s\nConstants:\n\t%s\nResults: ", strings.Join(strings.Split(c.Bytecode().Instructions.String(), "\n"), "\n\t"), strings.Join(constStrings, "\n\t"))
+
+		machine := vm.New(c.Bytecode())
+		err = machine.Run()
+		if err != nil {
+			fmt.Fprintf(out, "Woops! Executing bytecode failed:\n %s\n", err)
+			continue
+		}
+
+		stackTop := machine.StackTop()
+		io.WriteString(out, stackTop.Inspect())
+		io.WriteString(out, "\n")
 	}
 }
 
