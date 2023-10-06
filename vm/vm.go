@@ -49,6 +49,25 @@ func (vm *VirtualMachine) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpAdd:
+			right, err := vm.pop()
+			if err != nil {
+				return err
+			}
+			left, err := vm.pop()
+			if err != nil {
+				return err
+			}
+
+			leftVal := left.(*object.Integer).Value
+			rightVal := right.(*object.Integer).Value
+
+			result := leftVal + rightVal
+
+			err = vm.push(&object.Integer{Value: result})
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -65,4 +84,15 @@ func (vm *VirtualMachine) push(o object.Object) error {
 	vm.sp++
 
 	return nil
+}
+
+func (vm *VirtualMachine) pop() (object.Object, error) {
+	if vm.sp == 0 {
+		return nil, fmt.Errorf("stack empty")
+	}
+
+	obj := vm.stack[vm.sp-1]
+	vm.sp -= 1
+
+	return obj, nil
 }
