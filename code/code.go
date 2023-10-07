@@ -55,8 +55,12 @@ type Opcode byte
 
 const (
 	OpConstant Opcode = iota
-	OpAdd
 	OpPop
+
+	OpAdd
+	OpSub
+	OpMul
+	OpDiv
 )
 
 var definitions = map[Opcode]*Definition{
