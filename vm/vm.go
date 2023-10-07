@@ -68,6 +68,11 @@ func (vm *VirtualMachine) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpPop:
+			_, err := vm.pop()
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -95,4 +100,8 @@ func (vm *VirtualMachine) pop() (object.Object, error) {
 	vm.sp -= 1
 
 	return obj, nil
+}
+
+func (vm *VirtualMachine) LastPoppedStackElem() object.Object {
+	return vm.stack[vm.sp]
 }
