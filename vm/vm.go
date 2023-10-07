@@ -49,22 +49,8 @@ func (vm *VirtualMachine) Run() error {
 			if err != nil {
 				return err
 			}
-		case code.OpAdd:
-			right, err := vm.pop()
-			if err != nil {
-				return err
-			}
-			left, err := vm.pop()
-			if err != nil {
-				return err
-			}
-
-			leftVal := left.(*object.Integer).Value
-			rightVal := right.(*object.Integer).Value
-
-			result := leftVal + rightVal
-
-			err = vm.push(&object.Integer{Value: result})
+		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
+			err := vm.executeBinaryOperation(op)
 			if err != nil {
 				return err
 			}
@@ -77,6 +63,27 @@ func (vm *VirtualMachine) Run() error {
 	}
 
 	return nil
+}
+
+func (vm *VirtualMachine) executeBinaryOperation(op code.Opcode) error {
+	right, err := vm.pop()
+	if err != nil {
+		return err
+	}
+	left, err := vm.pop()
+	if err != nil {
+		return err
+	}
+
+	leftType := left.Type()
+	rightType := right.Type()
+
+	if leftType == object.INTEGER && rightType == object.INTEGER {
+		return vm.executeBinaryIntegerOperation(op, left, right)
+	}
+
+	return fmt.Errorf("unsupported types for binary operation: %s %s",
+		leftType, rightType)
 }
 
 func (vm *VirtualMachine) push(o object.Object) error {
@@ -104,4 +111,29 @@ func (vm *VirtualMachine) pop() (object.Object, error) {
 
 func (vm *VirtualMachine) LastPoppedStackElem() object.Object {
 	return vm.stack[vm.sp]
+}
+
+func (vm *VirtualMachine) executeBinaryIntegerOperation(op code.Opcode, left, right object.Object) error {
+	rightVal := right.(*object.Integer).Value
+	leftVal := left.(*object.Integer).Value
+
+	var result int64
+
+	switch op {
+	case code.OpAdd:
+		result = leftVal + rightVal
+	case code.OpSub:
+		result = leftVal - rightVal
+	case code.OpMul:
+		result = leftVal * rightVal
+	case code.OpDiv:
+		result = leftVal / rightVal
+	default:
+		return fmt.Errorf("unknown integer operation: %d", op)
+	}
+
+	fmt.Printf("Input %d %d %d = %d\n", leftVal, op, rightVal, result)
+
+	return vm.push(&object.Integer{Value: result})
+
 }
