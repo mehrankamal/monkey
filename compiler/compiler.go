@@ -64,6 +64,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 		value := &object.Integer{Value: node.Value}
 		address := c.addConstant(value)
 		c.emit(code.OpConstant, address)
+	case *ast.Boolean:
+		if node.Value {
+			c.emit(code.OpTrue)
+		} else {
+			c.emit(code.OpFalse)
+		}
 	}
 
 	return nil

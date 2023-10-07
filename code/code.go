@@ -54,8 +54,11 @@ func (ins Instructions) fmtInstruction(def *Definition, operands []int) string {
 type Opcode byte
 
 const (
-	OpConstant Opcode = iota
-	OpPop
+	OpPop Opcode = iota
+
+	OpConstant
+	OpTrue
+	OpFalse
 
 	OpAdd
 	OpSub
@@ -64,12 +67,16 @@ const (
 )
 
 var definitions = map[Opcode]*Definition{
+	OpPop: {"OpPop", []int{}},
+
 	OpConstant: {"OpConstant", []int{2}},
-	OpPop:      {"OpPop", []int{}},
-	OpAdd:      {"OpAdd", []int{}},
-	OpSub:      {"OpSub", []int{}},
-	OpMul:      {"OpMul", []int{}},
-	OpDiv:      {"OpDiv", []int{}},
+	OpTrue:     {"OpTrue", []int{}},
+	OpFalse:    {"OpFalse", []int{}},
+
+	OpAdd: {"OpAdd", []int{}},
+	OpSub: {"OpSub", []int{}},
+	OpMul: {"OpMul", []int{}},
+	OpDiv: {"OpDiv", []int{}},
 }
 
 func Lookup(op byte) (*Definition, error) {
