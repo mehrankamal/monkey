@@ -9,6 +9,9 @@ import (
 
 const StackSize = 2048
 
+var True = &object.Boolean{Value: true}
+var False = &object.Boolean{Value: false}
+
 type VirtualMachine struct {
 	constants    []object.Object
 	instructions code.Instructions
@@ -41,6 +44,12 @@ func (vm *VirtualMachine) Run() error {
 		op := code.Opcode(vm.instructions[ip])
 
 		switch op {
+		case code.OpPop:
+			_, err := vm.pop()
+			if err != nil {
+				return err
+			}
+
 		case code.OpConstant:
 			constIndex := code.ReadUint16(vm.instructions[ip+1:])
 			ip += 2
@@ -49,13 +58,19 @@ func (vm *VirtualMachine) Run() error {
 			if err != nil {
 				return err
 			}
-		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
-			err := vm.executeBinaryOperation(op)
+		case code.OpTrue:
+			err := vm.push(True)
 			if err != nil {
 				return err
 			}
-		case code.OpPop:
-			_, err := vm.pop()
+		case code.OpFalse:
+			err := vm.push(False)
+			if err != nil {
+				return err
+			}
+
+		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
+			err := vm.executeBinaryOperation(op)
 			if err != nil {
 				return err
 			}
