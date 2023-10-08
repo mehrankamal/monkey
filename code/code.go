@@ -71,6 +71,9 @@ const (
 	OpEqual
 	OpNotEqual
 	OpGreaterThan
+
+	OpJumpFalsy
+	OpJump
 )
 
 var definitions = map[Opcode]*Definition{
@@ -91,6 +94,9 @@ var definitions = map[Opcode]*Definition{
 	OpEqual:       {"OpEqual", []int{}},
 	OpNotEqual:    {"OpNotEqual", []int{}},
 	OpGreaterThan: {"OpGreaterThan", []int{}},
+
+	OpJumpFalsy: {"OpJumpFalsy", []int{2}},
+	OpJump:      {"OpJump", []int{2}},
 }
 
 func Lookup(op byte) (*Definition, error) {
