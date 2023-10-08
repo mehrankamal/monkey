@@ -91,10 +91,38 @@ func (vm *VirtualMachine) Run() error {
 			if err != nil {
 				return err
 			}
+
+		case code.OpJumpFalsy:
+			pos := int(code.ReadUint16(vm.instructions[ip+1:]))
+			ip += 2
+
+			condition, err := vm.pop()
+			if err != nil {
+				return err
+			}
+
+			if !isTruthy(condition) {
+				ip = pos - 1
+			}
+
+		case code.OpJump:
+			pos := int(code.ReadUint16(vm.instructions[ip+1:]))
+			ip = pos - 1
 		}
+
 	}
 
 	return nil
+}
+
+func isTruthy(condition object.Object) bool {
+	switch condition := condition.(type) {
+	case *object.Boolean:
+		return condition.Value
+
+	default:
+		return true
+	}
 }
 
 func (vm *VirtualMachine) executeBinaryOperation(op code.Opcode) error {
