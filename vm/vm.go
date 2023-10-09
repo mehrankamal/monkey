@@ -36,6 +36,12 @@ func New(bytecode *compiler.Bytecode) *VirtualMachine {
 	}
 }
 
+func NewWithGlobalsStore(bytecode *compiler.Bytecode, s []object.Object) *VirtualMachine {
+	vm := New(bytecode)
+	vm.globals = s
+	return vm
+}
+
 func (vm *VirtualMachine) StackTop() object.Object {
 	if vm.sp == 0 {
 		return nil

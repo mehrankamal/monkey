@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/mehrankamal/monkey/compiler"
 	"github.com/mehrankamal/monkey/lexer"
+	"github.com/mehrankamal/monkey/object"
 	"github.com/mehrankamal/monkey/parser"
 	"github.com/mehrankamal/monkey/vm"
 	"io"
@@ -15,6 +16,10 @@ const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+
+	constants := make([]object.Object, 0)
+	globals := make([]object.Object, vm.GlobalsSize)
+	symbolTable := compiler.NewSymbolTable()
 
 	for {
 		fmt.Printf(PROMPT)
@@ -34,7 +39,7 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		c := compiler.New()
+		c := compiler.NewWithState(symbolTable, constants)
 		err := c.Compile(program)
 		if err != nil {
 			fmt.Fprintf(out, "Woops! Compilation failed:\n %s\n", err)
@@ -49,7 +54,10 @@ func Start(in io.Reader, out io.Writer) {
 
 		fmt.Fprintf(out, "Generated Opcodes:\n\t%s\nConstants:\n\t%s\nResults: ", strings.Join(strings.Split(c.Bytecode().Instructions.String(), "\n"), "\n\t"), strings.Join(constStrings, "\n\t"))
 
-		machine := vm.New(c.Bytecode())
+		code := c.Bytecode()
+		constants = code.Constants
+
+		machine := vm.NewWithGlobalsStore(code, globals)
 		err = machine.Run()
 		if err != nil {
 			fmt.Fprintf(out, "Woops! Executing bytecode failed:\n %s\n", err)
