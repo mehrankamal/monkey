@@ -8,6 +8,7 @@ import (
 )
 
 const StackSize = 2048
+const GlobalsSize = 65536
 
 var True = &object.Boolean{Value: true}
 var False = &object.Boolean{Value: false}
@@ -19,6 +20,8 @@ type VirtualMachine struct {
 
 	stack []object.Object
 	sp    int // Always points to the next value. Top of stack is stack[sp-1]
+
+	globals []object.Object
 }
 
 func New(bytecode *compiler.Bytecode) *VirtualMachine {
@@ -28,6 +31,8 @@ func New(bytecode *compiler.Bytecode) *VirtualMachine {
 
 		stack: make([]object.Object, StackSize),
 		sp:    0,
+
+		globals: make([]object.Object, GlobalsSize),
 	}
 }
 
@@ -111,10 +116,28 @@ func (vm *VirtualMachine) Run() error {
 			if !isTruthy(condition) {
 				ip = pos - 1
 			}
-
 		case code.OpJump:
 			pos := int(code.ReadUint16(vm.instructions[ip+1:]))
 			ip = pos - 1
+
+		case code.OpSetGlobal:
+			globalIdx := code.ReadUint16(vm.instructions[ip+1:])
+			ip += 2
+
+			obj, err := vm.pop()
+			if err != nil {
+				return err
+			}
+
+			vm.globals[globalIdx] = obj
+		case code.OpGetGlobal:
+			idx := code.ReadUint16(vm.instructions[ip+1:])
+			ip += 2
+
+			err := vm.push(vm.globals[idx])
+			if err != nil {
+				return err
+			}
 		}
 
 	}
