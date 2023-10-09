@@ -75,6 +75,8 @@ const (
 
 	OpJumpFalsy
 	OpJump
+
+	OpSetGlobal
 )
 
 var definitions = map[Opcode]*Definition{
@@ -99,6 +101,8 @@ var definitions = map[Opcode]*Definition{
 
 	OpJumpFalsy: {"OpJumpFalsy", []int{2}},
 	OpJump:      {"OpJump", []int{2}},
+
+	OpSetGlobal: {"OpSetGlobal", []int{2}},
 }
 
 func Lookup(op byte) (*Definition, error) {

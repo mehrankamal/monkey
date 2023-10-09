@@ -18,6 +18,8 @@ type Compiler struct {
 
 	lastInstruction     EmittedInstruction
 	previousInstruction EmittedInstruction
+
+	symbolTable *SymbolTable
 }
 
 func New() *Compiler {
@@ -27,6 +29,8 @@ func New() *Compiler {
 
 		lastInstruction:     EmittedInstruction{},
 		previousInstruction: EmittedInstruction{},
+
+		symbolTable: NewSymbolTable(),
 	}
 }
 
@@ -47,13 +51,20 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 		}
-
 	case *ast.ExpressionStatement:
 		err := c.Compile(node.Expression)
 		if err != nil {
 			return err
 		}
 		c.emit(code.OpPop)
+	case *ast.LetStatement:
+		err := c.Compile(node.Value)
+		if err != nil {
+			return err
+		}
+
+		symbol := c.symbolTable.Define(node.Name.Value)
+		c.emit(code.OpSetGlobal, symbol.Index)
 
 	case *ast.PrefixExpression:
 		err := c.Compile(node.Right)
