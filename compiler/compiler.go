@@ -186,6 +186,15 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return fmt.Errorf("undefined variable %s", node.Value)
 		}
 		c.emit(code.OpGetGlobal, symbol.Index)
+	case *ast.ArrayLiteral:
+		for _, elem := range node.Elements {
+			err := c.Compile(elem)
+			if err != nil {
+				return err
+			}
+		}
+
+		c.emit(code.OpArray, len(node.Elements))
 	}
 
 	return nil
