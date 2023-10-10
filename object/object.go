@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/mehrankamal/monkey/ast"
+	"github.com/mehrankamal/monkey/code"
 	"hash/fnv"
 	"strings"
 )
@@ -20,16 +21,17 @@ type Hashable interface {
 }
 
 const (
-	INTEGER      Type = "INTEGER"
-	BOOLEAN           = "BOOLEAN"
-	NULL              = "NULL"
-	RETURN_VALUE      = "RETURN_VALUE"
-	ERROR             = "ERROR"
-	FUNCTION          = "FUNCTION"
-	STRING            = "STRING"
-	BUILTIN           = "BUILTIN"
-	ARRAY             = "ARRAY"
-	HASH              = "HASH"
+	INTEGER           Type = "INTEGER"
+	BOOLEAN                = "BOOLEAN"
+	NULL                   = "NULL"
+	RETURN_VALUE           = "RETURN_VALUE"
+	ERROR                  = "ERROR"
+	FUNCTION               = "FUNCTION"
+	STRING                 = "STRING"
+	BUILTIN                = "BUILTIN"
+	ARRAY                  = "ARRAY"
+	HASH                   = "HASH"
+	COMPILED_FUNCTION      = "COMPILED_FUNCTION"
 )
 
 type Integer struct {
@@ -64,6 +66,15 @@ type Null struct{}
 
 func (n *Null) Type() Type      { return NULL }
 func (n *Null) Inspect() string { return "null" }
+
+type CompiledFunction struct {
+	Instructions code.Instructions
+}
+
+func (cf *CompiledFunction) Type() Type { return COMPILED_FUNCTION }
+func (cf *CompiledFunction) Inspect() string {
+	return fmt.Sprintf("CompiledFunction[%p]", cf)
+}
 
 type ReturnValue struct {
 	Value Object
