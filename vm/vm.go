@@ -144,6 +144,18 @@ func (vm *VirtualMachine) Run() error {
 			if err != nil {
 				return err
 			}
+
+		case code.OpArray:
+			arraySize := int(code.ReadUint16(vm.instructions[ip+1:]))
+			ip += 2
+
+			array := vm.buildArray(vm.sp-arraySize, vm.sp)
+			vm.sp -= arraySize
+
+			err := vm.push(array)
+			if err != nil {
+				return err
+			}
 		}
 
 	}
@@ -327,4 +339,14 @@ func (vm *VirtualMachine) executeBinaryStringOperation(op code.Opcode, left, rig
 	rightValue := right.(*object.String).Value
 
 	return vm.push(&object.String{Value: leftValue + rightValue})
+}
+
+func (vm *VirtualMachine) buildArray(start int, end int) object.Object {
+	elems := make([]object.Object, end-start)
+
+	for i := start; i < end; i++ {
+		elems[i-start] = vm.stack[i]
+	}
+
+	return &object.Array{Elements: elems}
 }
