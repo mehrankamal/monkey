@@ -170,6 +170,20 @@ func (vm *VirtualMachine) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpIndex:
+			index, err := vm.pop()
+			if err != nil {
+				return err
+			}
+			left, err := vm.pop()
+			if err != nil {
+				return err
+			}
+
+			err = vm.executeIndexExpression(left, index)
+			if err != nil {
+				return err
+			}
 		}
 
 	}
@@ -382,4 +396,45 @@ func (vm *VirtualMachine) buildHash(start int, size int) (object.Object, error) 
 	}
 
 	return &object.Hash{Pairs: hashedPairs}, nil
+}
+
+func (vm *VirtualMachine) executeIndexExpression(left, index object.Object) error {
+	switch {
+	case left.Type() == object.ARRAY && index.Type() == object.INTEGER:
+		return vm.executeArrayIndex(left, index)
+	case left.Type() == object.HASH:
+		return vm.executeHashIndex(left, index)
+	default:
+		return fmt.Errorf("index operator not supported: %s", left.Type())
+	}
+}
+
+func (vm *VirtualMachine) executeArrayIndex(array object.Object, index object.Object) error {
+	arrayObj := array.(*object.Array)
+	idxValue := index.(*object.Integer).Value
+
+	max := int64(len(arrayObj.Elements) - 1)
+
+	if idxValue < 0 || idxValue > max {
+		return vm.push(Null)
+	}
+
+	return vm.push(arrayObj.Elements[idxValue])
+
+}
+
+func (vm *VirtualMachine) executeHashIndex(hash, index object.Object) error {
+	hashObj := hash.(*object.Hash)
+
+	key, ok := index.(object.Hashable)
+	if !ok {
+		return fmt.Errorf("unusable as hash key: %s", index.Type())
+	}
+
+	pair, ok := hashObj.Pairs[key.HashKey()]
+	if !ok {
+		return vm.push(Null)
+	}
+
+	return vm.push(pair.Value)
 }
