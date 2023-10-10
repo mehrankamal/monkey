@@ -175,12 +175,15 @@ func (vm *VirtualMachine) executeBinaryOperation(op code.Opcode) error {
 	leftType := left.Type()
 	rightType := right.Type()
 
-	if leftType == object.INTEGER && rightType == object.INTEGER {
+	switch {
+	case leftType == object.INTEGER && rightType == object.INTEGER:
 		return vm.executeBinaryIntegerOperation(op, left, right)
+	case leftType == object.STRING && rightType == object.STRING:
+		return vm.executeBinaryStringOperation(op, left, right)
+	default:
+		return fmt.Errorf("unsupported types for binary operation: %s %s",
+			leftType, rightType)
 	}
-
-	return fmt.Errorf("unsupported types for binary operation: %s %s",
-		leftType, rightType)
 }
 
 func (vm *VirtualMachine) push(o object.Object) error {
@@ -313,4 +316,15 @@ func (vm *VirtualMachine) executeNegateOperator() error {
 
 	value := operand.(*object.Integer).Value
 	return vm.push(&object.Integer{Value: -value})
+}
+
+func (vm *VirtualMachine) executeBinaryStringOperation(op code.Opcode, left, right object.Object) error {
+	if op != code.OpAdd {
+		return fmt.Errorf("unknown string operator: %d", op)
+	}
+
+	leftValue := left.(*object.String).Value
+	rightValue := right.(*object.String).Value
+
+	return vm.push(&object.String{Value: leftValue + rightValue})
 }
