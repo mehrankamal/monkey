@@ -250,6 +250,9 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if c.lastInstructionIsOp(code.OpPop) {
 			c.replaceLastPopWithReturn()
 		}
+		if !c.lastInstructionIsOp(code.OpReturnValue) {
+			c.emit(code.OpReturn)
+		}
 
 		instructions := c.leaveScope()
 
@@ -306,6 +309,10 @@ func (c *Compiler) setLastInstruction(op code.Opcode, pos int) {
 }
 
 func (c *Compiler) lastInstructionIsOp(opcode code.Opcode) bool {
+	if len(c.currentInstructions()) == 0 {
+		return false
+	}
+
 	return c.scopes[c.scopeIndex].lastInstruction.Opcode == opcode
 }
 
