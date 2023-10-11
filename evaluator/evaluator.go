@@ -172,7 +172,10 @@ func evalFunctionCall(fn object.Object, args []object.Object) object.Object {
 		evaluated := Eval(function.Body, extendedEnv)
 		return unwrapReturnValue(evaluated)
 	case *object.Builtin:
-		return function.Fn(args...)
+		if result := function.Fn(args...); result != nil {
+			return result
+		}
+		return NULL
 	default:
 		return newError("not a function: %s", fn.Type())
 	}
