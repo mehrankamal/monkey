@@ -69,6 +69,7 @@ func (n *Null) Inspect() string { return "null" }
 
 type CompiledFunction struct {
 	Instructions code.Instructions
+	NumLocals    int
 }
 
 func (cf *CompiledFunction) Type() Type { return COMPILED_FUNCTION }
