@@ -232,6 +232,17 @@ func (vm *VirtualMachine) Run() error {
 			if err != nil {
 				return err
 			}
+
+		case code.OpReturn:
+			vm.popFrame()
+			_, err := vm.pop()
+			if err != nil {
+				return err
+			}
+			err = vm.push(Null)
+			if err != nil {
+				return err
+			}
 		}
 
 	}
