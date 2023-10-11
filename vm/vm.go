@@ -209,14 +209,15 @@ func (vm *VirtualMachine) Run() error {
 			}
 
 		case code.OpCall:
+			numArgs := code.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
 
-			fn, ok := vm.stack[vm.sp-1].(*object.CompiledFunction)
+			fn, ok := vm.stack[vm.sp-1-int(numArgs)].(*object.CompiledFunction)
 			if !ok {
 				return fmt.Errorf("calling non-function")
 			}
 
-			frame := NewFrame(fn, vm.sp)
+			frame := NewFrame(fn, vm.sp-int(numArgs))
 			vm.pushFrame(frame)
 			vm.sp += fn.NumLocals
 
