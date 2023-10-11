@@ -207,6 +207,31 @@ func (vm *VirtualMachine) Run() error {
 			if err != nil {
 				return err
 			}
+
+		case code.OpCall:
+			fn, ok := vm.stack[vm.sp-1].(*object.CompiledFunction)
+			if !ok {
+				return fmt.Errorf("calling non-function")
+			}
+
+			frame := NewFrame(fn)
+			vm.pushFrame(frame)
+
+		case code.OpReturnValue:
+			returnValue, err := vm.pop()
+			if err != nil {
+				return err
+			}
+
+			vm.popFrame()
+			_, err = vm.pop()
+			if err != nil {
+				return err
+			}
+			err = vm.push(returnValue)
+			if err != nil {
+				return err
+			}
 		}
 
 	}
