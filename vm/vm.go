@@ -209,21 +209,13 @@ func (vm *VirtualMachine) Run() error {
 			}
 
 		case code.OpCall:
-			numArgs := code.ReadUint8(ins[ip+1:])
+			numArgs := int(code.ReadUint8(ins[ip+1:]))
 			vm.currentFrame().ip += 1
 
-			fn, ok := vm.stack[vm.sp-1-int(numArgs)].(*object.CompiledFunction)
-			if !ok {
-				return fmt.Errorf("calling non-function")
+			err := vm.executeCall(numArgs)
+			if err != nil {
+				return err
 			}
-
-			if int(numArgs) != fn.NumParameters {
-				return fmt.Errorf("wrong number of arguments: want=%d, got=%d", fn.NumParameters, numArgs)
-			}
-
-			frame := NewFrame(fn, vm.sp-int(numArgs))
-			vm.pushFrame(frame)
-			vm.sp += fn.NumLocals
 
 		case code.OpReturnValue:
 			returnValue, err := vm.pop()
@@ -269,12 +261,34 @@ func (vm *VirtualMachine) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpGetBuiltin:
+			functionIdx := code.ReadUint8(ins[ip+1:])
+			vm.currentFrame().ip += 1
 
+			definition := object.Builtins[functionIdx]
+
+			err := vm.push(definition.Builtin)
+			if err != nil {
+				return err
+			}
 		}
 
 	}
 
 	return nil
+}
+
+func (vm *VirtualMachine) executeCall(numArgs int) error {
+	callee := vm.stack[vm.sp-1-numArgs]
+
+	switch callee := callee.(type) {
+	case *object.CompiledFunction:
+		return vm.callFunction(callee, numArgs)
+	case *object.Builtin:
+		return vm.callBuiltin(callee, numArgs)
+	default:
+		return fmt.Errorf("calling non-function and non-built-in")
+	}
 }
 
 func (vm *VirtualMachine) pushFrame(f *Frame) {
@@ -533,4 +547,35 @@ func (vm *VirtualMachine) executeHashIndex(hash, index object.Object) error {
 	}
 
 	return vm.push(pair.Value)
+}
+
+func (vm *VirtualMachine) callFunction(callee *object.CompiledFunction, numArgs int) error {
+
+	if numArgs != callee.NumParameters {
+		return fmt.Errorf("wrong number of arguments: want=%d, got=%d", callee.NumParameters, numArgs)
+	}
+
+	frame := NewFrame(callee, vm.sp-numArgs)
+	vm.pushFrame(frame)
+
+	vm.sp += callee.NumLocals
+
+	return nil
+}
+
+func (vm *VirtualMachine) callBuiltin(callee *object.Builtin, numArgs int) error {
+	args := vm.stack[vm.sp-numArgs : vm.sp]
+
+	result := callee.Fn(args...)
+	vm.sp = vm.sp - numArgs - 1
+
+	var err error = nil
+
+	if result != nil {
+		err = vm.push(result)
+	} else {
+		err = vm.push(Null)
+	}
+
+	return err
 }
