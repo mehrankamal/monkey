@@ -217,6 +217,10 @@ func (vm *VirtualMachine) Run() error {
 				return fmt.Errorf("calling non-function")
 			}
 
+			if int(numArgs) != fn.NumParameters {
+				return fmt.Errorf("wrong number of arguments: want=%d, got=%d", fn.NumParameters, numArgs)
+			}
+
 			frame := NewFrame(fn, vm.sp-int(numArgs))
 			vm.pushFrame(frame)
 			vm.sp += fn.NumLocals
