@@ -188,6 +188,26 @@ func TestCallingFunctionsWithoutArguments(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestFunctionsWithReturnStatement(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			input: `
+				let earlyExit = fn() { return 99; 100; };
+				earlyExit();
+			`,
+			expected: 99,
+		},
+		{
+			input: `
+				let earlyExit = fn() { return 99; return 100; };
+				earlyExit();
+			`,
+			expected: 99,
+		},
+	}
+	runVmTests(t, tests)
+}
+
 func parse(input string) *ast.Program {
 	l := lexer.New(input)
 	p := parser.New(l)
