@@ -209,6 +209,8 @@ func (vm *VirtualMachine) Run() error {
 			}
 
 		case code.OpCall:
+			vm.currentFrame().ip += 1
+
 			fn, ok := vm.stack[vm.sp-1].(*object.CompiledFunction)
 			if !ok {
 				return fmt.Errorf("calling non-function")
