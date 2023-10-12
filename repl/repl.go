@@ -52,7 +52,17 @@ func Start(in io.Reader, out io.Writer) {
 		constStrings := []string{}
 
 		for idx, constant := range c.Bytecode().Constants {
-			constStrings = append(constStrings, fmt.Sprintf("%d: %s", idx, constant.Inspect()))
+			var constString string
+
+			switch constant := constant.(type) {
+			case *object.CompiledFunction:
+				splitInstructions := strings.Split(constant.Instructions.String(), "\n")
+				constString = strings.Join(splitInstructions, "\n\t\t")
+			default:
+				constString = constant.Inspect()
+			}
+
+			constStrings = append(constStrings, fmt.Sprintf("%d: %s", idx, constString))
 		}
 
 		fmt.Fprintf(out, "Generated Opcodes:\n\t%s\nConstants:\n\t%s\nResults: ", strings.Join(strings.Split(c.Bytecode().Instructions.String(), "\n"), "\n\t"), strings.Join(constStrings, "\n\t"))
