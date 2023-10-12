@@ -513,6 +513,25 @@ func TestRecursiveFunctions(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestRecursiveFibonacci(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			input: `
+				let fibonacci = fn(x) {
+					return if (x == 0) {
+						x
+					} else {
+						if(x == 1) { x }
+						else { fibonacci(x - 1) + fibonacci(x - 2) }
+					}
+				};
+				fibonacci(15);`,
+			expected: 610,
+		},
+	}
+	runVmTests(t, tests)
+}
+
 func parse(input string) *ast.Program {
 	l := lexer.New(input)
 	p := parser.New(l)
