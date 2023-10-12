@@ -32,6 +32,7 @@ const (
 	ARRAY                  = "ARRAY"
 	HASH                   = "HASH"
 	COMPILED_FUNCTION      = "COMPILED_FUNCTION"
+	CLOSURE                = "CLOSURE"
 )
 
 type Integer struct {
@@ -76,6 +77,16 @@ type CompiledFunction struct {
 func (cf *CompiledFunction) Type() Type { return COMPILED_FUNCTION }
 func (cf *CompiledFunction) Inspect() string {
 	return fmt.Sprintf("CompiledFunction[%p]", cf)
+}
+
+type Closure struct {
+	Fn   *CompiledFunction
+	Free []Object
+}
+
+func (c *Closure) Type() Type { return CLOSURE }
+func (c *Closure) Inspect() string {
+	return fmt.Sprintf("Closure[%p]", c)
 }
 
 type ReturnValue struct {
