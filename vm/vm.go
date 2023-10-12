@@ -29,7 +29,8 @@ type VirtualMachine struct {
 
 func New(bytecode *compiler.Bytecode) *VirtualMachine {
 	mainFn := &object.CompiledFunction{Instructions: bytecode.Instructions}
-	mainFrame := NewFrame(mainFn, 0)
+	mainClosure := &object.Closure{Fn: mainFn}
+	mainFrame := NewFrame(mainClosure, 0)
 
 	frames := make([]*Frame, MaxFrames)
 	frames[0] = mainFrame
@@ -208,6 +209,16 @@ func (vm *VirtualMachine) Run() error {
 				return err
 			}
 
+		case code.OpClosure:
+			constIndex := code.ReadUint16(ins[ip+1:])
+			_ = code.ReadUint8(ins[ip+3:])
+			vm.currentFrame().ip += 3
+
+			err := vm.pushClosure(int(constIndex))
+			if err != nil {
+				return err
+			}
+
 		case code.OpCall:
 			numArgs := int(code.ReadUint8(ins[ip+1:]))
 			vm.currentFrame().ip += 1
@@ -282,12 +293,12 @@ func (vm *VirtualMachine) executeCall(numArgs int) error {
 	callee := vm.stack[vm.sp-1-numArgs]
 
 	switch callee := callee.(type) {
-	case *object.CompiledFunction:
-		return vm.callFunction(callee, numArgs)
+	case *object.Closure:
+		return vm.callClosure(callee, numArgs)
 	case *object.Builtin:
 		return vm.callBuiltin(callee, numArgs)
 	default:
-		return fmt.Errorf("calling non-function and non-built-in")
+		return fmt.Errorf("calling non-closure and non-built-in")
 	}
 }
 
@@ -549,16 +560,16 @@ func (vm *VirtualMachine) executeHashIndex(hash, index object.Object) error {
 	return vm.push(pair.Value)
 }
 
-func (vm *VirtualMachine) callFunction(callee *object.CompiledFunction, numArgs int) error {
+func (vm *VirtualMachine) callClosure(callee *object.Closure, numArgs int) error {
 
-	if numArgs != callee.NumParameters {
-		return fmt.Errorf("wrong number of arguments: want=%d, got=%d", callee.NumParameters, numArgs)
+	if numArgs != callee.Fn.NumParameters {
+		return fmt.Errorf("wrong number of arguments: want=%d, got=%d", callee.Fn.NumParameters, numArgs)
 	}
 
 	frame := NewFrame(callee, vm.sp-numArgs)
 	vm.pushFrame(frame)
 
-	vm.sp += callee.NumLocals
+	vm.sp += callee.Fn.NumLocals
 
 	return nil
 }
@@ -578,4 +589,15 @@ func (vm *VirtualMachine) callBuiltin(callee *object.Builtin, numArgs int) error
 	}
 
 	return err
+}
+
+func (vm *VirtualMachine) pushClosure(idx int) error {
+	constant := vm.constants[idx]
+	function, ok := constant.(*object.CompiledFunction)
+	if !ok {
+		return fmt.Errorf("not a function: %+v", constant)
+	}
+
+	closure := &object.Closure{Fn: function}
+	return vm.push(closure)
 }
